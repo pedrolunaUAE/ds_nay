@@ -126,13 +126,67 @@ function makeTooltipCallback(){
       case 'servicios-basicos-chart': dataType='vivienda'; subType=(xLabel==='Electricidad'?'electricidad':(xLabel==='Agua entubada'?'agua':'drenaje')); break;
       case 'tic-combinado-chart': dataType='vivienda'; subType=(xLabel==='Computadora'?'computadora':(xLabel==='Internet'?'internet':'celular')); break;
     }
-    const dsCount = context.chart?.data?.datasets?.length || 1; const absIndex = (dsCount===1)? context.dataIndex : context.datasetIndex;
+    const dsCount = context.chart?.data?.datasets?.length || 1;
+    const absIndex = (dsCount===1)? context.dataIndex : context.datasetIndex;
     const abs = (dataType&&subType)? getAbsoluteValue(absIndex, context, dataType, subType) : null;
-    return unit==='%'? `${xLabel}: ${value}%${abs? ' ('+abs+' '+(dataType==='vivienda'?'viviendas':'personas')+')':''}` : `${xLabel}: ${value} ${unit}`;
+    const numVal = (typeof value === 'number')? value : Number(value) || 0;
+    if(unit==='%'){
+      const absLabel = abs? ` (${formatNumber(abs)} ${dataType==='vivienda'?'viviendas':'personas'})` : '';
+      return `${xLabel}: ${numVal.toFixed(1)}%${absLabel}`;
+    }
+    // unidad distinta a porcentaje (por ejemplo 'personas')
+    const absLabel = abs? ` (${formatNumber(abs)})` : '';
+    return `${xLabel}: ${numVal} ${unit}${absLabel}`;
   }
 }
 
-const customValueLabelsPlugin = { id:'customValueLabels', afterDatasetsDraw(chart){ const ctx=chart.ctx; ctx.save(); ctx.font=`${Chart.defaults.font.size}px ${Chart.defaults.font.family}`; ctx.fillStyle=Chart.defaults.color; ctx.textAlign='center'; ctx.textBaseline='bottom'; const id=chart.canvas?.id||''; const datasets=chart.data.datasets||[]; const labels=chart.data.labels||[]; datasets.forEach((ds,di)=>{ const meta=chart.getDatasetMeta(di); meta.data.forEach((elem,i)=>{ const val=parseFloat(ds.data[i]); if(isNaN(val)) return; const xLabel=labels[i]||''; let dataType=null, subType=null, unit='%'; switch(id){ case 'analfabetismo-chart': dataType='poblacion'; subType='analfabetismo'; break; case 'participacion-economica-chart': dataType='economia'; subType='pea_total'; break; case 'sin-salud-chart': dataType='poblacion'; subType='sin_salud'; break; case 'con-salud-chart': dataType='poblacion'; subType='con_salud'; break; case 'lengua-indigena-chart': dataType='poblacion'; subType='lengua_indigena'; break; case 'discapacidad-chart': dataType='poblacion'; subType='discapacidad'; break; case 'ocupantes-vivienda-chart': unit='personas'; dataType='vivienda'; subType='ocupantes'; break; case 'lugar-nacimiento-chart': dataType='movilidad'; subType=(xLabel==='Nacidos en la entidad'?'nacidos_entidad':'nacidos_otra_entidad'); break; case 'movilidad-reciente-chart': dataType='movilidad'; subType=(xLabel.indexOf('Residían en otra')>=0?'residia_otra_entidad':'misma_residencia'); break; case 'servicios-basicos-chart': dataType='vivienda'; subType=(xLabel==='Electricidad'?'electricidad':(xLabel==='Agua entubada'?'agua':'drenaje')); break; case 'tic-combinado-chart': dataType='vivienda'; subType=(xLabel==='Computadora'?'computadora':(xLabel==='Internet'?'internet':'celular')); break; } const absIndex=(datasets.length===1)? i : di; const abs=(dataType&&subType)? getAbsoluteValue(absIndex,{parsed:{y:val},dataIndex:i,datasetIndex:di,label:xLabel},dataType,subType):null; const pos=elem.tooltipPosition(); ctx.fillText(unit==='%'? `${val}%` : `${val} ${unit}`, pos.x, pos.y-4); if(abs){ ctx.fillText(`(${abs})`, pos.x, pos.y-16); } }); }); ctx.restore(); } }; if (typeof Chart!=='undefined'){ Chart.register(customValueLabelsPlugin); }
+const customValueLabelsPlugin = {
+  id: 'customValueLabels',
+  afterDatasetsDraw(chart){
+    const ctx = chart.ctx; ctx.save();
+    ctx.font = `${Chart.defaults.font.size}px ${Chart.defaults.font.family}`;
+    ctx.fillStyle = Chart.defaults.color; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+    const id = chart.canvas?.id || '';
+    const datasets = chart.data.datasets || [];
+    const labels = chart.data.labels || [];
+    datasets.forEach((ds, di) => {
+      const meta = chart.getDatasetMeta(di);
+      meta.data.forEach((elem, i) => {
+        const raw = ds.data[i];
+        const val = parseFloat(raw);
+        if (isNaN(val)) return;
+        const xLabel = labels[i] || '';
+        let dataType = null, subType = null, unit = '%';
+        switch(id){
+          case 'analfabetismo-chart': dataType='poblacion'; subType='analfabetismo'; break;
+          case 'participacion-economica-chart': dataType='economia'; subType='pea_total'; break;
+          case 'sin-salud-chart': dataType='poblacion'; subType='sin_salud'; break;
+          case 'con-salud-chart': dataType='poblacion'; subType='con_salud'; break;
+          case 'lengua-indigena-chart': dataType='poblacion'; subType='lengua_indigena'; break;
+          case 'discapacidad-chart': dataType='poblacion'; subType='discapacidad'; break;
+          case 'ocupantes-vivienda-chart': unit='personas'; dataType='vivienda'; subType='ocupantes'; break;
+          case 'lugar-nacimiento-chart': dataType='movilidad'; subType=(xLabel==='Nacidos en la entidad'?'nacidos_entidad':'nacidos_otra_entidad'); break;
+          case 'movilidad-reciente-chart': dataType='movilidad'; subType=(xLabel.indexOf('Residían en otra')>=0?'residia_otra_entidad':'misma_residencia'); break;
+          case 'servicios-basicos-chart': dataType='vivienda'; subType=(xLabel==='Electricidad'?'electricidad':(xLabel==='Agua entubada'?'agua':'drenaje')); break;
+          case 'tic-combinado-chart': dataType='vivienda'; subType=(xLabel==='Computadora'?'computadora':(xLabel==='Internet'?'internet':'celular')); break;
+        }
+        const absIndex = (datasets.length===1)? i : di;
+        const abs = (dataType&&subType)? getAbsoluteValue(absIndex, { parsed:{ y: val }, dataIndex:i, datasetIndex:di, label:xLabel }, dataType, subType) : null;
+        const pos = elem.tooltipPosition();
+        if(unit === '%'){
+          ctx.fillText(`${val.toFixed(1)}%`, pos.x, pos.y-4);
+          if(abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
+        } else {
+          // e.g. 'personas'
+          ctx.fillText(`${val} ${unit}`, pos.x, pos.y-4);
+          if(abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
+        }
+      });
+    });
+    ctx.restore();
+  }
+};
+if (typeof Chart!=='undefined'){ Chart.register(customValueLabelsPlugin); }
 
 function getSimpleBarChartConfig(title, unit, isPercentage=true){ return { type:'bar', data:{ labels:['Municipal','Estatal','Nacional'], datasets:[{ label:title||'Dato', data:[], backgroundColor:[colors.municipal,colors.estatal,colors.nacional] }] }, options:{ maintainAspectRatio:false, plugins:{ title:{ display: !!title, text:title }, legend:{ display:false }, tooltip:{ callbacks:{ label: makeTooltipCallback() } }, customValueLabels:{} }, scales:{ y:{ beginAtZero:true, title:{ display:true, text: unit } } } } } }
 function getPEASexoConfig(){ return { type:'bar', data:{ labels:['Hombres','Mujeres'], datasets:[] }, options:{ maintainAspectRatio:false, plugins:{ title:{ display:true, text:'' }, legend:{ position:'bottom' }, tooltip:{ callbacks:{ label: makeTooltipCallback() } }, customValueLabels:{} }, scales:{ y:{ beginAtZero:true, title:{ display:true, text:'Porcentaje' } } } } } }
