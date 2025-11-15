@@ -111,7 +111,9 @@ function getAbsoluteValue(index, context, dataType, subType=null){
 
 function makeTooltipCallback(){
   return function(context){
-    const id = context.chart?.canvas?.id || ''; const value = context.parsed?.y ?? context.parsed?.x; const xLabel = context.label || '';
+    const id = context.chart?.canvas?.id || '';
+    const value = context.parsed?.y ?? context.parsed?.x;
+    const xLabel = context.label || '';
     // Asegurar que trabajamos con números
     const rawValue = (typeof value === 'number') ? value : Number(value) || 0;
     let dataType=null, subType=null, unit='%';
