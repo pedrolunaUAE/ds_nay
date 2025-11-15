@@ -46,8 +46,46 @@ function updateIndicators(k){ const d=(window.nayaritData||nayaritData); const m
 }
 
 function updatePiramidePoblacional(m){
-  const h=[-(m.P_0A4_M/m.POBTOT*100).toFixed(1),-(m.P_5A9_M/m.POBTOT*100).toFixed(1),-(m.P_10A14_M/m.POBTOT*100).toFixed(1),-(m.P_15A19_M/m.POBTOT*100).toFixed(1),-(m.P_20A24_M/m.POBTOT*100).toFixed(1),-(m.P_25A29_M/m.POBTOT*100).toFixed(1),-(m.P_30A34_M/m.POBTOT*100).toFixed(1),-(m.P_35A39_M/m.POBTOT*100).toFixed(1),-(m.P_40A44_M/m.POBTOT*100).toFixed(1),-(m.P_45A49_M/m.POBTOT*100).toFixed(1),-(m.P_50A54_M/m.POBTOT*100).toFixed(1),-(m.P_55A59_M/m.POBTOT*100).toFixed(1),-(m.P_60A64_M/m.POBTOT*100).toFixed(1),-(m.P_65A69_M/m.POBTOT*100).toFixed(1),-(m.P_70A74_M/m.POBTOT*100).toFixed(1),-(m.P_75A79_M/m.POBTOT*100).toFixed(1),-(m.P_80A84_M/m.POBTOT*100).toFixed(1),-(m.P_85YMAS_M/m.POBTOT*100).toFixed(1)];
-  const f=[ (m.P_0A4_F/m.POBTOT*100).toFixed(1), (m.P_5A9_F/m.POBTOT*100).toFixed(1), (m.P_10A14_F/m.POBTOT*100).toFixed(1), (m.P_15A19_F/m.POBTOT*100).toFixed(1), (m.P_20A24_F/m.POBTOT*100).toFixed(1), (m.P_25A29_F/m.POBTOT*100).toFixed(1), (m.P_30A34_F/m.POBTOT*100).toFixed(1), (m.P_35A39_F/m.POBTOT*100).toFixed(1), (m.P_40A44_F/m.POBTOT*100).toFixed(1), (m.P_45A49_F/m.POBTOT*100).toFixed(1), (m.P_50A54_F/m.POBTOT*100).toFixed(1), (m.P_55A59_F/m.POBTOT*100).toFixed(1), (m.P_60A64_F/m.POBTOT*100).toFixed(1), (m.P_65A69_F/m.POBTOT*100).toFixed(1), (m.P_70A74_F/m.POBTOT*100).toFixed(1), (m.P_75A79_F/m.POBTOT*100).toFixed(1), (m.P_80A84_F/m.POBTOT*100).toFixed(1), (m.P_85YMAS_F/m.POBTOT*100).toFixed(1)];
+  const h=[
+    parseFloat((-(m.P_0A4_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_5A9_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_10A14_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_15A19_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_20A24_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_25A29_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_30A34_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_35A39_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_40A44_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_45A49_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_50A54_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_55A59_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_60A64_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_65A69_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_70A74_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_75A79_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_80A84_M/m.POBTOT*100)).toFixed(1)),
+    parseFloat((-(m.P_85YMAS_M/m.POBTOT*100)).toFixed(1))
+  ];
+  const f=[
+    parseFloat((m.P_0A4_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_5A9_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_10A14_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_15A19_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_20A24_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_25A29_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_30A34_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_35A39_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_40A44_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_45A49_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_50A54_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_55A59_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_60A64_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_65A69_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_70A74_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_75A79_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_80A84_F/m.POBTOT*100).toFixed(1)),
+    parseFloat((m.P_85YMAS_F/m.POBTOT*100).toFixed(1))
+  ];
   // Dibujar las barras transparentes y mostrar color solo al pasar el mouse (hover)
   // Aplicar un relleno sutil y mantener la leyenda oculta; no imprimiremos etiquetas sobre las barras
   charts.piramidePoblacional.data.datasets = [
