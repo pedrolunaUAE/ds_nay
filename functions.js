@@ -120,6 +120,7 @@ function makeTooltipCallback(){
     switch(id){
       case 'analfabetismo-chart': dataType='poblacion'; subType='analfabetismo'; break;
       case 'participacion-economica-chart': dataType='economia'; subType='pea_total'; break;
+      case 'pea-sexo-chart': dataType='economia'; subType = (xLabel==='Hombres' ? 'pea_hombres' : 'pea_mujeres'); break;
       case 'sin-salud-chart': dataType='poblacion'; subType='sin_salud'; break;
       case 'con-salud-chart': dataType='poblacion'; subType='con_salud'; break;
       case 'lengua-indigena-chart': dataType='poblacion'; subType='lengua_indigena'; break;
