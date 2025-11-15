@@ -48,7 +48,12 @@ function updateIndicators(k){ const d=(window.nayaritData||nayaritData); const m
 function updatePiramidePoblacional(m){
   const h=[-(m.P_0A4_M/m.POBTOT*100).toFixed(1),-(m.P_5A9_M/m.POBTOT*100).toFixed(1),-(m.P_10A14_M/m.POBTOT*100).toFixed(1),-(m.P_15A19_M/m.POBTOT*100).toFixed(1),-(m.P_20A24_M/m.POBTOT*100).toFixed(1),-(m.P_25A29_M/m.POBTOT*100).toFixed(1),-(m.P_30A34_M/m.POBTOT*100).toFixed(1),-(m.P_35A39_M/m.POBTOT*100).toFixed(1),-(m.P_40A44_M/m.POBTOT*100).toFixed(1),-(m.P_45A49_M/m.POBTOT*100).toFixed(1),-(m.P_50A54_M/m.POBTOT*100).toFixed(1),-(m.P_55A59_M/m.POBTOT*100).toFixed(1),-(m.P_60A64_M/m.POBTOT*100).toFixed(1),-(m.P_65A69_M/m.POBTOT*100).toFixed(1),-(m.P_70A74_M/m.POBTOT*100).toFixed(1),-(m.P_75A79_M/m.POBTOT*100).toFixed(1),-(m.P_80A84_M/m.POBTOT*100).toFixed(1),-(m.P_85YMAS_M/m.POBTOT*100).toFixed(1)];
   const f=[ (m.P_0A4_F/m.POBTOT*100).toFixed(1), (m.P_5A9_F/m.POBTOT*100).toFixed(1), (m.P_10A14_F/m.POBTOT*100).toFixed(1), (m.P_15A19_F/m.POBTOT*100).toFixed(1), (m.P_20A24_F/m.POBTOT*100).toFixed(1), (m.P_25A29_F/m.POBTOT*100).toFixed(1), (m.P_30A34_F/m.POBTOT*100).toFixed(1), (m.P_35A39_F/m.POBTOT*100).toFixed(1), (m.P_40A44_F/m.POBTOT*100).toFixed(1), (m.P_45A49_F/m.POBTOT*100).toFixed(1), (m.P_50A54_F/m.POBTOT*100).toFixed(1), (m.P_55A59_F/m.POBTOT*100).toFixed(1), (m.P_60A64_F/m.POBTOT*100).toFixed(1), (m.P_65A69_F/m.POBTOT*100).toFixed(1), (m.P_70A74_F/m.POBTOT*100).toFixed(1), (m.P_75A79_F/m.POBTOT*100).toFixed(1), (m.P_80A84_F/m.POBTOT*100).toFixed(1), (m.P_85YMAS_F/m.POBTOT*100).toFixed(1)];
-  charts.piramidePoblacional.data.datasets=[{label:'Hombres',data:h,backgroundColor:'#003f5c'},{label:'Mujeres',data:f,backgroundColor:'#dd5182'}]; charts.piramidePoblacional.update();
+  // Dibujar las barras transparentes y mostrar color solo al pasar el mouse (hover)
+  charts.piramidePoblacional.data.datasets = [
+    { label: 'Hombres', data: h, backgroundColor: 'transparent', hoverBackgroundColor: colors.municipal, borderColor: colors.municipal, borderWidth: 1 },
+    { label: 'Mujeres', data: f, backgroundColor: 'transparent', hoverBackgroundColor: colors.accent2 || '#dd5182', borderColor: colors.accent2 || '#dd5182', borderWidth: 1 }
+  ];
+  charts.piramidePoblacional.update();
 }
 function updateEscolaridad(m){ const e=nayaritData.estatal, n=nayaritData.nacional; charts.escolaridad.data.datasets[0].data=[m.GRAPROES,e.GRAPROES,n.GRAPROES]; charts.escolaridad.update(); }
 function updateAnalfabetismo(m){ const e=nayaritData.estatal, n=nayaritData.nacional; const v=[calcPct(m.P15YM_AN,m.P_15YMAS),calcPct(e.P15YM_AN,e.P_15YMAS),calcPct(n.P15YM_AN,n.P_15YMAS)]; charts.analfabetismo.data.datasets[0].data=v.map(parseFloat); charts.analfabetismo.update(); }

@@ -205,7 +205,8 @@ function getPiramidePoblacionalConfig(){
       indexAxis: 'y',
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom' },
+        // No mostrar la leyenda: los colores se revelarán al pasar el mouse sobre cada barra
+        legend: { display: false },
         tooltip: {
           callbacks: {
             label: function(context){
