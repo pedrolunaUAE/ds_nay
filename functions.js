@@ -178,13 +178,16 @@ const customValueLabelsPlugin = {
         const absIndex = (datasets.length===1)? i : di;
         const abs = (dataType&&subType)? getAbsoluteValue(absIndex, { parsed:{ y: val }, dataIndex:i, datasetIndex:di, label:xLabel }, dataType, subType) : null;
         const pos = elem.tooltipPosition();
+        // Mostrar siempre el valor principal (porcentaje o valor), pero solo dibujar el absoluto
+        // cuando se solicita explícitamente (por ejemplo al generar PDF)
+        const showAbs = !!window.__showChartAbsOnCanvas;
         if(unit === '%'){
           ctx.fillText(`${val.toFixed(1)}%`, pos.x, pos.y-4);
-          if(abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
+          if(showAbs && abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
         } else {
           // e.g. 'personas'
           ctx.fillText(`${val} ${unit}`, pos.x, pos.y-4);
-          if(abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
+          if(showAbs && abs){ ctx.fillText(`(${formatNumber(abs)})`, pos.x, pos.y-16); }
         }
       });
     });

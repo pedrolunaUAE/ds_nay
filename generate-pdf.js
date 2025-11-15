@@ -38,7 +38,29 @@ function generatePDF(){
     {id:'servicios-basicos', bullets:[ `Electricidad: ${pct(m.VPH_C_ELEC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_C_ELEC||0)} viviendas)`, `Agua entubada: ${pct(m.VPH_AGUADV,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_AGUADV||0)} viviendas)`, `Drenaje: ${pct(m.VPH_DRENAJ,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_DRENAJ||0)} viviendas)` ]},
     {id:'conectividad', bullets:[ `Computadora: ${pct(m.VPH_PC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_PC||0)} viviendas)`, `Internet: ${pct(m.VPH_INTER,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_INTER||0)} viviendas)`, `Teléfono celular: ${pct(m.VPH_CEL,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_CEL||0)} viviendas)` ]}
   ];
-  (async()=>{ try { const logoData = await loadImageAsDataURL(logoPath); doc.addImage(logoData,'PNG', margin, margin-1, 22, 22); } catch {} doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18; for(const sec of plan){ doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; } const mapTitle = { 'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO', 'economia':'III. PANORAMA ECONÓMICO', 'salud':'IV. SERVICIOS DE SALUD', 'inclusion':'V. INCLUSIÓN Y DIVERSIDAD', 'movilidad':'VI. MOVILIDAD POBLACIONAL', 'vivienda':'VII. VIVIENDA', 'servicios-basicos':'VIII. SERVICIOS BÁSICOS EN VIVIENDAS', 'conectividad':'VIII. CONECTIVIDAD Y BIENES TIC' }; doc.text(mapTitle[sec.id]||'', margin, y); y += 6; addBullets(sec.bullets); await captureSection(sec.id); } doc.save(`Informacion_Sociodemografica_${(municipio||'').replace(/\s+/g,'_')}.pdf`); document.body.removeChild(loader); })();
+  (async()=>{
+    try { const logoData = await loadImageAsDataURL(logoPath); doc.addImage(logoData,'PNG', margin, margin-1, 22, 22); } catch {}
+    // Antes de capturar, activar la bandera que indica a los charts que dibujen los valores absolutos
+    try{
+      window.__showChartAbsOnCanvas = true;
+      if(window.charts){ Object.values(window.charts).forEach(c=>{ try{ c.update(); }catch{} }); }
+      // Esperar un poco para asegurar que los canvas se han re-renderizado
+      await new Promise(r=>setTimeout(r,120));
+  }catch {}
+
+    doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18;
+    for(const sec of plan){ doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; } const mapTitle = { 'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO', 'economia':'III. PANORAMA ECONÓMICO', 'salud':'IV. SERVICIOS DE SALUD', 'inclusion':'V. INCLUSIÓN Y DIVERSIDAD', 'movilidad':'VI. MOVILIDAD POBLACIONAL', 'vivienda':'VII. VIVIENDA', 'servicios-basicos':'VIII. SERVICIOS BÁSICOS EN VIVIENDAS', 'conectividad':'VIII. CONECTIVIDAD Y BIENES TIC' }; doc.text(mapTitle[sec.id]||'', margin, y); y += 6; addBullets(sec.bullets); await captureSection(sec.id); }
+
+    // Tras capturar todo, desactivar la bandera y re-renderizar los charts para volver al estado de pantalla
+    try{
+      window.__showChartAbsOnCanvas = false;
+      if(window.charts){ Object.values(window.charts).forEach(c=>{ try{ c.update(); }catch{} }); }
+      await new Promise(r=>setTimeout(r,80));
+  }catch {}
+
+    doc.save(`Informacion_Sociodemografica_${(municipio||'').replace(/\s+/g,'_')}.pdf`);
+    document.body.removeChild(loader);
+  })();
 }
 
 // Exponer generatePDF globalmente si estamos en navegador
