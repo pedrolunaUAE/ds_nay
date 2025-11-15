@@ -262,7 +262,7 @@ function updateViviendaIndicators(municipioKey){
   const elDes = document.getElementById('viviendas-deshabitadas'); if(elDes) elDes.textContent = formatNumber(m.VIVPAR_DES);
   const elOcup = document.getElementById('ocupantes-vivienda'); if(elOcup) elOcup.textContent = (m.PROM_OCUP||0).toFixed(1);
                     // Log temporal para depuración: muestra índice, label y claves usadas
-                    try{ console.debug('[piramide-tooltip]', { label: context.label, dataIndex: idx, datasetIndex: dsIndex, parsed: context.parsed, varKey, absPeople }); }catch(e){}
+                    try{ console.log('[piramide-tooltip]', { label: context.label, dataIndex: idx, datasetIndex: dsIndex, parsed: context.parsed, varKey, absPeople }); }catch(e){}
 }
 
 // Exponer funciones públicas como API global para uso desde HTML y para ESLint

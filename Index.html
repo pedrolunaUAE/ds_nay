@@ -138,8 +138,10 @@
 
   <script src="data/nayaritData.js"></script>
   <script>
-    if (typeof nayaritData === 'undefined' && typeof window.nayaritData !== 'undefined') {
-      var nayaritData = window.nayaritData;
+    // Normalizar la referencia global a los datos sin redeclarar variables.
+    // Si el archivo de datos define `nayaritData` (const/var), aseguramos que también esté en `window`.
+    if (typeof window.nayaritData === 'undefined' && typeof nayaritData !== 'undefined') {
+      window.nayaritData = nayaritData;
     }
   </script>
   <script src="functions.js"></script>
