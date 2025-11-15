@@ -1,0 +1,17 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    ports:
+      - "8080:80"
+    container_name: nayarit_2020_web
+    restart: unless-stopped
+  web-dev:
+    image: nginx:1.25-alpine
+    ports:
+      - "8081:80"
+    container_name: nayarit_2020_web_dev
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./:/usr/share/nginx/html:ro
+    restart: unless-stopped

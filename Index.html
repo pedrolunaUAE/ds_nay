@@ -1,0 +1,149 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Información Sociodemográfica por Municipio del Estado de Nayarit, 2020</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body class="bg-gray-50">
+  <nav class="bg-white shadow-md sticky top-0 z-50">
+    <div class="container mx-auto px-4 py-3">
+      <div class="flex justify-between items-center">
+        <div class="flex items-center">
+          <img src="img/LogotipoLealtad.png" class="h-10 w-auto mr-3" alt="Logo" />
+          <h1 class="text-xl font-bold text-[#740623]">Información Sociodemográfica de Nayarit</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+          <label for="municipio-select" class="text-sm">Municipio:</label>
+          <select id="municipio-select" class="border rounded px-2 py-1 text-sm"></select>
+          <button id="download-pdf" class="btn-download">Descargar PDF</button>
+        </div>
+      </div>
+      <div class="mt-3 overflow-x-auto">
+        <div class="flex space-x-1 text-sm">
+          <a href="#estructura-demografica" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Estructura Demográfica</a>
+          <a href="#educacion" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Educación</a>
+          <a href="#economia" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Economía</a>
+          <a href="#salud" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Salud</a>
+          <a href="#inclusion" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Inclusión</a>
+          <a href="#movilidad" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Movilidad</a>
+          <a href="#vivienda" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Vivienda</a>
+          <a href="#servicios" class="nav-link px-3 py-1 rounded-md hover:bg-gray-100">Servicios</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="container mx-auto px-4 py-8">
+    <section id="estructura-demografica" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">I. Estructura Demográfica</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <h3 class="text-lg font-semibold text-[#740623] mb-4">Indicadores Demográficos</h3>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población Total</p><p id="poblacion-total" class="text-2xl font-bold text-[#740623]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población Femenina</p><p id="poblacion-femenina" class="text-2xl font-bold text-[#dd5182]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población Masculina</p><p id="poblacion-masculina" class="text-2xl font-bold text-[#00405C]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Índice de Masculinidad</p><p id="indice-masculinidad" class="text-2xl font-bold text-[#955196]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Edad Mediana</p><p id="edad-mediana" class="text-2xl font-bold text-[#ff6e54]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población 0-14 años</p><p id="poblacion-0-14" class="text-2xl font-bold text-[#ffa600]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población 15-64 años</p><p id="poblacion-15-64" class="text-2xl font-bold text-[#9CAEC0]">-</p></div>
+            <div class="bg-gray-50 p-4 rounded-lg"><p class="text-sm text-gray-500">Población 65 años y más</p><p id="poblacion-65-mas" class="text-2xl font-bold text-[#955196]">-</p></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-lg shadow-md p-4">
+          <h3 class="text-lg font-semibold text-[#740623] mb-4">Pirámide Poblacional</h3>
+          <div class="chart-container"><canvas id="piramide-poblacional"></canvas></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="educacion" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">II. Educación</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Grado Promedio de Escolaridad</h3><div class="chart-container"><canvas id="escolaridad-chart"></canvas></div></div>
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Tasa de Analfabetismo (15 años y más)</h3><div class="chart-container"><canvas id="analfabetismo-chart"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="economia" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">III. Participación Económica</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Tasa de Participación Económica (12 años y más)</h3><div class="chart-container"><canvas id="participacion-economica-chart"></canvas></div></div>
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Población Económicamente Activa (PEA) por Sexo</h3><div class="chart-container"><canvas id="pea-sexo-chart"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="salud" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">IV. Servicios de Salud</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Población sin Afiliación a Servicios de Salud</h3><div class="chart-container"><canvas id="sin-salud-chart"></canvas></div></div>
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Población Afiliada a Servicios de Salud</h3><div class="chart-container"><canvas id="con-salud-chart"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="inclusion" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">V. Inclusión y Diversidad</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Hablantes de Lengua Indígena</h3><div class="chart-container"><canvas id="lengua-indigena-chart"></canvas></div></div>
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Población con Discapacidad</h3><div class="chart-container"><canvas id="discapacidad-chart"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="movilidad" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">VI. Movilidad Poblacional</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Lugar de Nacimiento</h3><div class="chart-container"><canvas id="lugar-nacimiento-chart"></canvas></div></div>
+        <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Movilidad Reciente (2015-2020)</h3><div class="chart-container"><canvas id="movilidad-reciente-chart"></canvas></div></div>
+      </div>
+    </section>
+
+    <section id="vivienda" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">VII. Vivienda</h2>
+      <div class="bg-white rounded-lg shadow-md p-4"><h3 class="text-lg font-semibold text-[#740623] mb-4">Promedio de Ocupantes por Vivienda</h3><div class="chart-container"><canvas id="ocupantes-vivienda-chart"></canvas></div></div>
+    </section>
+
+    <section id="servicios" class="section mb-12">
+      <h2 class="text-2xl font-bold text-[#740623] mb-4">VIII. Servicios en Viviendas</h2>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div id="servicios-basicos" class="bg-white rounded-lg shadow-md p-4">
+          <h3 class="text-lg font-semibold text-[#740623] mb-4">Cobertura de Servicios Básicos en viviendas particulares habitadas</h3>
+          <div class="chart-container" style="height: 400px;"><canvas id="servicios-basicos-chart"></canvas></div>
+          <p class="text-gray-600 mb-6 text-xs">Nota: no se consideran las clases de vivienda particular: local no construido para habitación y refugio.</p>
+        </div>
+        <div id="conectividad" class="bg-white rounded-lg shadow-md p-4">
+          <h3 class="text-lg font-semibold text-[#740623] mb-4">Conectividad y Bienes TIC en viviendas particulares habitadas</h3>
+          <div class="chart-container" style="height: 400px;"><canvas id="tic-combinado-chart"></canvas></div>
+          <p class="text-gray-600 mb-6 text-xs">Nota: no se consideran las clases de vivienda particular: local no construido para habitación y refugio.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="bg-[#98526E] text-white py-4">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="md:col-span-2"><p class="text-xs">Fuente: INEGI, Censo de Población y Vivienda 2020.</p></div>
+        <div class="flex justify-end"><p class="text-xs">Generado el: <span id="fecha-generacion"></span></p></div>
+      </div>
+      <div class="mt-4 pt-4 border-t border-white/30 text-center"><p class="text-xs">© 2025 - Información Sociodemográfica del Estado de Nayarit</p></div>
+    </div>
+  </footer>
+
+  <script src="data/nayaritData.js"></script>
+  <script>
+    if (typeof nayaritData === 'undefined' && typeof window.nayaritData !== 'undefined') {
+      var nayaritData = window.nayaritData;
+    }
+  </script>
+  <script src="functions.js"></script>
+  <script src="generate-pdf.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+{
+  "name": "build_integrado_full",
+  "version": "1.0.0",
+  "description": "Este paquete incluye el front completo y tu `data/nayaritData.js` ya integrado.",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^9.39.1"
+  }
+}
