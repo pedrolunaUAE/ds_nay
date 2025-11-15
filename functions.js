@@ -147,6 +147,11 @@ const customValueLabelsPlugin = {
     ctx.font = `${Chart.defaults.font.size}px ${Chart.defaults.font.family}`;
     ctx.fillStyle = Chart.defaults.color; ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
     const id = chart.canvas?.id || '';
+    // No dibujar etiquetas de valor para la pirámide (evitamos imprimir textos sobre las barras)
+    if(id === 'piramide-poblacional'){
+      ctx.restore();
+      return;
+    }
     const datasets = chart.data.datasets || [];
     const labels = chart.data.labels || [];
     datasets.forEach((ds, di) => {
@@ -223,8 +228,8 @@ function getPiramidePoblacionalConfig(){
               const sex = (value < 0) ? 'h' : 'f';
               const varKey = (map[idx] && map[idx][sex]) ? map[idx][sex] : null;
               const absPeople = varKey ? (m[varKey] || 0) : 0;
-              const dsLabel = context.dataset && context.dataset.label ? context.dataset.label : '';
-              return `${dsLabel ? dsLabel + ': ' : ''}${abs.toFixed(1)}% (${formatNumber(absPeople)} personas)`;
+                  // No imprimir el label del dataset en la pirámide; solo mostrar porcentaje y absoluto
+                  return `${abs.toFixed(1)}% (${formatNumber(absPeople)} personas)`;
             }
           }
         }
