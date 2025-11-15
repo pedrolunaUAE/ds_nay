@@ -51,8 +51,8 @@ function updatePiramidePoblacional(m){
   // Dibujar las barras transparentes y mostrar color solo al pasar el mouse (hover)
   // Aplicar un relleno sutil y mantener la leyenda oculta; no imprimiremos etiquetas sobre las barras
   charts.piramidePoblacional.data.datasets = [
-    { label: 'Hombres', data: h, backgroundColor: 'rgba(0,63,92,0.12)', hoverBackgroundColor: colors.municipal, borderColor: colors.municipal, borderWidth: 0.8 },
-    { label: 'Mujeres', data: f, backgroundColor: 'rgba(221,81,130,0.12)', hoverBackgroundColor: colors.accent2 || '#dd5182', borderColor: colors.accent2 || '#dd5182', borderWidth: 0.8 }
+    { label: 'Hombres', data: h, backgroundColor: 'rgba(0,63,92,0.16)', hoverBackgroundColor: colors.municipal, borderColor: colors.municipal, borderWidth: 1 },
+    { label: 'Mujeres', data: f, backgroundColor: 'rgba(221,81,130,0.16)', hoverBackgroundColor: colors.accent2 || '#dd5182', borderColor: colors.accent2 || '#dd5182', borderWidth: 1 }
   ];
   charts.piramidePoblacional.update();
 }
