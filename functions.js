@@ -112,6 +112,8 @@ function getAbsoluteValue(index, context, dataType, subType=null){
 function makeTooltipCallback(){
   return function(context){
     const id = context.chart?.canvas?.id || ''; const value = context.parsed?.y ?? context.parsed?.x; const xLabel = context.label || '';
+    // Asegurar que trabajamos con números
+    const rawValue = (typeof value === 'number') ? value : Number(value) || 0;
     let dataType=null, subType=null, unit='%';
     switch(id){
       case 'analfabetismo-chart': dataType='poblacion'; subType='analfabetismo'; break;
@@ -129,14 +131,13 @@ function makeTooltipCallback(){
     const dsCount = context.chart?.data?.datasets?.length || 1;
     const absIndex = (dsCount===1)? context.dataIndex : context.datasetIndex;
     const abs = (dataType&&subType)? getAbsoluteValue(absIndex, context, dataType, subType) : null;
-    const numVal = (typeof value === 'number')? value : Number(value) || 0;
     if(unit==='%'){
       const absLabel = abs? ` (${formatNumber(abs)} ${dataType==='vivienda'?'viviendas':'personas'})` : '';
-      return `${xLabel}: ${numVal.toFixed(1)}%${absLabel}`;
+      return `${xLabel}: ${Math.abs(rawValue).toFixed(1)}%${absLabel}`;
     }
     // unidad distinta a porcentaje (por ejemplo 'personas')
     const absLabel = abs? ` (${formatNumber(abs)})` : '';
-    return `${xLabel}: ${numVal} ${unit}${absLabel}`;
+    return `${xLabel}: ${rawValue} ${unit}${absLabel}`;
   }
 }
 
@@ -218,22 +219,25 @@ function getPiramidePoblacionalConfig(){
         tooltip: {
           callbacks: {
             label: function(context){
-              const value = context.parsed.x;
-              const abs = Math.abs(value);
-              const idx = context.dataIndex;
-              const mSel = document.getElementById('municipio-select');
-              const key = mSel ? mSel.value : null;
-              const base = (window.nayaritData || nayaritData) || {};
-              const m = (base && base.municipios && key) ? base.municipios[key] : {};
-              const map = [
-                {h:'P_0A4_M',f:'P_0A4_F'},{h:'P_5A9_M',f:'P_5A9_F'},{h:'P_10A14_M',f:'P_10A14_F'},{h:'P_15A19_M',f:'P_15A19_F'},{h:'P_20A24_M',f:'P_20A24_F'},{h:'P_25A29_M',f:'P_25A29_F'},{h:'P_30A34_M',f:'P_30A34_F'},{h:'P_35A39_M',f:'P_35A39_F'},{h:'P_40A44_M',f:'P_40A44_F'},{h:'P_45A49_M',f:'P_45A49_F'},{h:'P_50A54_M',f:'P_50A54_F'},{h:'P_55A59_M',f:'P_55A59_F'},{h:'P_60A64_M',f:'P_60A64_F'},{h:'P_65A69_M',f:'P_65A69_F'},{h:'P_70A74_M',f:'P_70A74_F'},{h:'P_75A79_M',f:'P_75A79_F'},{h:'P_80A84_M',f:'P_80A84_F'},{h:'P_85YMAS_M',f:'P_85YMAS_F'}
-              ];
-              const sex = (value < 0) ? 'h' : 'f';
-              const varKey = (map[idx] && map[idx][sex]) ? map[idx][sex] : null;
-              const absPeople = varKey ? (m[varKey] || 0) : 0;
-                  // No imprimir el label del dataset en la pirámide; solo mostrar porcentaje y absoluto
+                  // Garantizar coerción numérica y usar datasetIndex para elegir sexo
+                  const rawVal = Number(context.parsed.x) || 0;
+                  const abs = Math.abs(rawVal);
+                  const idx = context.dataIndex;
+                  const dsIndex = context.datasetIndex;
+                  const mSel = document.getElementById('municipio-select');
+                  const key = mSel ? mSel.value : null;
+                  const base = (window.nayaritData || nayaritData) || {};
+                  const m = (base && base.municipios && key) ? base.municipios[key] : {};
+                  const map = [
+                    {h:'P_0A4_M',f:'P_0A4_F'},{h:'P_5A9_M',f:'P_5A9_F'},{h:'P_10A14_M',f:'P_10A14_F'},{h:'P_15A19_M',f:'P_15A19_F'},{h:'P_20A24_M',f:'P_20A24_F'},{h:'P_25A29_M',f:'P_25A29_F'},{h:'P_30A34_M',f:'P_30A34_F'},{h:'P_35A39_M',f:'P_35A39_F'},{h:'P_40A44_M',f:'P_40A44_F'},{h:'P_45A49_M',f:'P_45A49_F'},{h:'P_50A54_M',f:'P_50A54_F'},{h:'P_55A59_M',f:'P_55A59_F'},{h:'P_60A64_M',f:'P_60A64_F'},{h:'P_65A69_M',f:'P_65A69_F'},{h:'P_70A74_M',f:'P_70A74_F'},{h:'P_75A79_M',f:'P_75A79_F'},{h:'P_80A84_M',f:'P_80A84_F'},{h:'P_85YMAS_M',f:'P_85YMAS_F'}
+                  ];
+                  // datasetIndex 0 -> Hombres, 1 -> Mujeres (coherente con updatePiramidePoblacional)
+                  const sex = (dsIndex === 0) ? 'h' : 'f';
+                  const varKey = (map[idx] && map[idx][sex]) ? map[idx][sex] : null;
+                  const absPeople = varKey ? (m[varKey] || 0) : 0;
+                  // Mostrar porcentaje absoluto y conteo de personas
                   return `${abs.toFixed(1)}% (${formatNumber(absPeople)} personas)`;
-            }
+                }
           }
         }
       },
