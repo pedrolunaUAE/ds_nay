@@ -1,6 +1,21 @@
 
 function formatNumber(num){ return new Intl.NumberFormat('es-MX').format(num); }
 
+// Pequeña utilidad para oscurecer un color hex
+function darkenColor(hex, amount){
+  try{
+    const h = hex.replace('#','');
+    const num = parseInt(h,16);
+    let r = (num >> 16) & 0xFF;
+    let g = (num >> 8) & 0xFF;
+    let b = num & 0xFF;
+    r = Math.max(0, Math.min(255, Math.round(r * (1 - amount))));
+    g = Math.max(0, Math.min(255, Math.round(g * (1 - amount))));
+    b = Math.max(0, Math.min(255, Math.round(b * (1 - amount))));
+    return '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
+  }catch(e){ return hex; }
+}
+
 document.addEventListener('DOMContentLoaded',()=>{
   const d = document.getElementById('fecha-generacion'); if(d){ d.textContent = new Date().toISOString().split('T')[0]; }
   const sel = document.getElementById('municipio-select');
@@ -88,9 +103,10 @@ function updatePiramidePoblacional(m){
   ];
   // Dibujar las barras transparentes y mostrar color solo al pasar el mouse (hover)
   // Aplicar un relleno sutil y mantener la leyenda oculta; no imprimiremos etiquetas sobre las barras
+  // Usar color sólido por defecto para las barras (Hombres / Mujeres)
   charts.piramidePoblacional.data.datasets = [
-    { label: 'Hombres', data: h, backgroundColor: 'rgba(0,63,92,0.16)', hoverBackgroundColor: colors.municipal, borderColor: colors.municipal, borderWidth: 1 },
-    { label: 'Mujeres', data: f, backgroundColor: 'rgba(221,81,130,0.16)', hoverBackgroundColor: colors.accent2 || '#dd5182', borderColor: colors.accent2 || '#dd5182', borderWidth: 1 }
+    { label: 'Hombres', data: h, backgroundColor: colors.municipal, hoverBackgroundColor: darkenColor(colors.municipal, 0.08), borderColor: colors.municipal, borderWidth: 1 },
+    { label: 'Mujeres', data: f, backgroundColor: colors.accent2 || '#dd5182', hoverBackgroundColor: darkenColor(colors.accent2 || '#dd5182', 0.08), borderColor: colors.accent2 || '#dd5182', borderWidth: 1 }
   ];
   charts.piramidePoblacional.update();
 }

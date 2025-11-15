@@ -217,16 +217,22 @@ function getPiramidePoblacionalConfig(){
       onHover: function(evt, activeElements){
         try{
           if(activeElements && activeElements.length){
-            console.log('[piramide-onHover]', activeElements.map(e=>({ datasetIndex: e.datasetIndex, index: e.index, x: e.tooltipPosition && e.tooltipPosition().x, y: e.tooltipPosition && e.tooltipPosition().y })));
+            // Imprimir JSON para evitar objetos colapsados en la consola
+            const arr = activeElements.map(e=>({ datasetIndex: e.datasetIndex, index: e.index, x: e.tooltipPosition && e.tooltipPosition().x, y: e.tooltipPosition && e.tooltipPosition().y }));
+            console.log('[piramide-onHover]', JSON.stringify(arr));
           }
         }catch(err){}
       },
       indexAxis: 'y',
       maintainAspectRatio: false,
       plugins: {
-        // No mostrar la leyenda: los colores se revelarán al pasar el mouse sobre cada barra
-        legend: { display: false },
+  // Mostrar leyenda abajo y usar símbolo circular en lugar de cuadro
+  legend: { display: true, position: 'bottom', labels: { usePointStyle: true, pointStyle: 'circle', boxWidth: 10 } },
         tooltip: {
+          // Para la pirámide preferimos el modo 'nearest' y 'intersect: true'
+          // así la tooltip corresponde al elemento exacto bajo el cursor
+          mode: 'nearest',
+          intersect: true,
           callbacks: {
             label: function(context){
                   // Garantizar coerción numérica y usar datasetIndex para elegir sexo
@@ -246,6 +252,8 @@ function getPiramidePoblacionalConfig(){
                   const varKey = (map[idx] && map[idx][sex]) ? map[idx][sex] : null;
                   const absPeople = varKey ? (m[varKey] || 0) : 0;
                   // Mostrar porcentaje absoluto y conteo de personas
+                  // Log temporal para depuración (puedes quitarlo más tarde)
+                  // console.log('[piramide-tooltip]', JSON.stringify({ label: context.label, dataIndex: idx, datasetIndex: dsIndex, parsed: context.parsed, varKey, absPeople }));
                   return `${abs.toFixed(1)}% (${formatNumber(absPeople)} personas)`;
                 }
           }
@@ -269,8 +277,7 @@ function updateViviendaIndicators(municipioKey){
   const elPart = document.getElementById('viviendas-particulares-habitadas'); if(elPart) elPart.textContent = formatNumber(m.TVIVPARHAB);
   const elDes = document.getElementById('viviendas-deshabitadas'); if(elDes) elDes.textContent = formatNumber(m.VIVPAR_DES);
   const elOcup = document.getElementById('ocupantes-vivienda'); if(elOcup) elOcup.textContent = (m.PROM_OCUP||0).toFixed(1);
-                    // Log temporal para depuración: muestra índice, label y claves usadas
-                    try{ console.log('[piramide-tooltip]', { label: context.label, dataIndex: idx, datasetIndex: dsIndex, parsed: context.parsed, varKey, absPeople }); }catch(e){}
+                    // actualizar indicadores: nada más
 }
 
 // Exponer funciones públicas como API global para uso desde HTML y para ESLint
