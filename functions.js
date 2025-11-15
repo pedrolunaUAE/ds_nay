@@ -213,6 +213,14 @@ function getPiramidePoblacionalConfig(){
       datasets: []
     },
     options: {
+      // Manejador temporal para depuración: registra qué elementos considera activos Chart al hacer hover
+      onHover: function(evt, activeElements){
+        try{
+          if(activeElements && activeElements.length){
+            console.log('[piramide-onHover]', activeElements.map(e=>({ datasetIndex: e.datasetIndex, index: e.index, x: e.tooltipPosition && e.tooltipPosition().x, y: e.tooltipPosition && e.tooltipPosition().y })));
+          }
+        }catch(err){}
+      },
       indexAxis: 'y',
       maintainAspectRatio: false,
       plugins: {
