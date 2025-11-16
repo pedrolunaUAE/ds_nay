@@ -1,10 +1,22 @@
 
 function loadImageAsDataURL(src){
-  return new Promise((resolve,reject)=>{
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = ()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/png')); };
-    img.onerror = reject; img.src = src;
+  // Intentar primero con fetch->blob (más fiable para archivos locales/servidos)
+  return fetch(src, {mode: 'cors'}).then(r=>{
+    if(!r.ok) throw new Error('fetch failed');
+    return r.blob();
+  }).then(blob=>new Promise((resolve,reject)=>{
+    const reader = new FileReader();
+    reader.onload = ()=> resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  })).catch(()=>{
+    // Fallback clásico usando Image (mantener compatibilidad)
+    return new Promise((resolve,reject)=>{
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = ()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/png')); };
+      img.onerror = reject; img.src = src;
+    });
   });
 }
 
@@ -59,9 +71,11 @@ function generatePDF(){
       if(window.charts){ Object.values(window.charts).forEach(c=>{ try{ c.update(); }catch{} }); }
       // Esperar un poco para asegurar que los canvas se han re-renderizado
       await new Promise(r=>setTimeout(r,120));
-  }catch {}
+    }catch {}
 
-    doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18;
+    // Nota: no re-dibujamos el título/municipio aquí porque ya fueron colocados arriba
+    // y evitar duplicados en el PDF (ver control en el bloque de logo).
+    // y ya fue ajustado más arriba cuando se agregó el logo.
     for(const sec of plan){
       doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; }
       const mapTitle = {
