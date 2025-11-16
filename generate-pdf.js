@@ -64,31 +64,32 @@ function generatePDF(){
       // fallback: centro y municipio a la derecha si no carga logo
       try{ doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18; }catch(e){}
     }
-    // Primero capturamos la sección de 'Estructura Demográfica' para que aparezca
-    // justo debajo del título/municipio en el PDF.
-    await captureSection('estructura-demografica');
-
-    // Luego capturamos el resto del <main> sin la sección ya capturada para
-    // evitar duplicados: clonamos, removemos la sección y capturamos el clon.
-    try{
-      const main = document.querySelector('main');
-      if(main){
-        const clone = main.cloneNode(true);
-        const es = clone.querySelector('#estructura-demografica');
-        if(es && es.parentNode) es.parentNode.removeChild(es);
-        clone.style.position = 'absolute'; clone.style.left = '-9999px'; clone.style.top = '0px'; document.body.appendChild(clone);
-        await captureElement(clone);
-        document.body.removeChild(clone);
-      }
-    }catch(e){ /* ignore capture errors */ }
-
     // Antes de capturar, activar la bandera que indica a los charts que dibujen los valores absolutos
+    // Hacemos esto ANTES de capturar para que los canvas ya contengan los valores absolutos
     try{
       window.__showChartAbsOnCanvas = true;
       if(window.charts){ Object.values(window.charts).forEach(c=>{ try{ c.update(); }catch{} }); }
       // Esperar un poco para asegurar que los canvas se han re-renderizado
       await new Promise(r=>setTimeout(r,120));
     }catch {}
+
+    // Primero capturamos la sección de 'Estructura Demográfica' para que aparezca
+    // justo debajo del título/municipio en el PDF.
+    await captureSection('estructura-demografica');
+
+    // Luego capturamos el resto del <main> sin la sección ya capturada para
+    // evitar duplicados: ocultamos temporalmente la sección original y capturamos el main.
+    try{
+      const esEl = document.getElementById('estructura-demografica');
+      if(esEl){
+        const prevDisplay = esEl.style.display;
+        esEl.style.display = 'none';
+        await captureElement(document.querySelector('main'));
+        esEl.style.display = prevDisplay;
+      } else {
+        await captureElement(document.querySelector('main'));
+      }
+    }catch(e){ /* ignore capture errors */ }
 
     // Ya se capturó visualmente todo el <main>, no es necesario iterar secciones
 
