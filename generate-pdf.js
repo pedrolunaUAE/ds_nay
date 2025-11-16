@@ -38,6 +38,7 @@ function generatePDF(){
     });
   }
   function captureSection(id){ return new Promise((resolve)=>{ const el = document.getElementById(id); if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasPaginated(canvas); resolve(); }).catch(()=> resolve()); }); }
+  function captureElement(el){ return new Promise((resolve)=>{ if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasPaginated(canvas); resolve(); }).catch(()=> resolve()); }); }
   function addBullets(lines){ doc.setFontSize(9); doc.setFont(undefined,'normal'); lines.forEach(line=>{ if(y + 6 > pageH - margin){ doc.addPage(); y = margin; } doc.text('• '+line, margin, y); y += 5.5; }); y += 2; }
   const d = (window.nayaritData||nayaritData); const mKey = municipioSelect? municipioSelect.value : null; const m = d.municipios[mKey]||{}; const pct = (num,den)=> ((num||0)/(den||1)*100).toFixed(1);
   const plan = [
@@ -62,8 +63,8 @@ function generatePDF(){
       // fallback: centro y municipio a la derecha si no carga logo
       try{ doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18; }catch(e){}
     }
-    // Capturar la sección de estructura demográfica (incluye las tarjetas de indicadores y la pirámide)
-    await captureSection('estructura-demografica');
+  // Capturar TODO el contenido principal de la página (incluye tarjetas, pirámide y todas las secciones)
+  await captureElement(document.querySelector('main'));
 
     // Antes de capturar, activar la bandera que indica a los charts que dibujen los valores absolutos
     try{
@@ -73,31 +74,7 @@ function generatePDF(){
       await new Promise(r=>setTimeout(r,120));
     }catch {}
 
-    // Nota: no re-dibujamos el título/municipio aquí porque ya fueron colocados arriba
-    // y evitar duplicados en el PDF (ver control en el bloque de logo).
-    // y ya fue ajustado más arriba cuando se agregó el logo.
-    // El usuario pidió quitar varias secciones del PDF (II, III, IV, VI, VII, VIII).
-    // Filtramos el plan para eliminar los ids correspondientes antes de iterar.
-    const removeIds = ['educacion','economia','salud','movilidad','vivienda','servicios'];
-    const renderPlan = plan.filter(s => !removeIds.includes(s.id));
-
-    for(const sec of renderPlan){
-      doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; }
-      const mapTitle = {
-        'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO',
-        'economia':'III. PANORAMA ECONÓMICO',
-        'salud':'IV. SERVICIOS DE SALUD',
-        'inclusion':'V. INCLUSIÓN Y DIVERSIDAD',
-        'movilidad':'VI. MOVILIDAD POBLACIONAL',
-        'vivienda':'VII. VIVIENDA',
-        'servicios':'VIII. SERVICIOS EN VIVIENDAS'
-      };
-      doc.text(mapTitle[sec.id]||'', margin, y);
-      y += 6;
-      addBullets(sec.bullets);
-      // Capturar la sección completa si existe (captura padres con múltiples gráficas)
-      await captureSection(sec.id);
-    }
+    // Ya se capturó visualmente todo el <main>, no es necesario iterar secciones
 
     // Tras capturar todo, desactivar la bandera y re-renderizar los charts para volver al estado de pantalla
     try{
