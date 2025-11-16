@@ -15,8 +15,23 @@ function loadImageAsDataURL(src){
     // muchos navegadores producen origin 'null' y la carga falla.
     return new Promise((resolve,reject)=>{
       const img = new Image();
-      img.onload = ()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/png')); };
-      img.onerror = reject; img.src = src;
+      img.onload = ()=>{
+        const c=document.createElement('canvas');
+        c.width=img.naturalWidth;
+        c.height=img.naturalHeight;
+        const ctx=c.getContext('2d');
+        ctx.drawImage(img,0,0);
+        try{
+          // toDataURL puede lanzar SecurityError si el canvas está tainted
+          const data = c.toDataURL('image/png');
+          resolve(data);
+        }catch(err){
+          // Rechazamos para que el caller use el fallback de no-logo
+          reject(err);
+        }
+      };
+      img.onerror = reject;
+      img.src = src;
     });
   });
 }
@@ -38,8 +53,26 @@ function generatePDF(){
       while(offset < total){ const h = Math.min(sliceHpx, total - offset); pageCanvas.width = canvas.width; pageCanvas.height = h; ctx.fillStyle = '#fff'; ctx.fillRect(0,0,canvas.width,h); ctx.drawImage(canvas, 0, offset, canvas.width, h, 0, 0, canvas.width, h); const imgData = pageCanvas.toDataURL('image/jpeg', 0.9); if(y + (h*scale) > pageH - margin){ doc.addPage(); y = margin; } doc.addImage(imgData, 'JPEG', margin, y, contentW, h*scale); y += h*scale + 4; if(offset + h < total && y + 6 > pageH - margin){ doc.addPage(); y = margin; } offset += h; } resolve();
     });
   }
-  function captureSection(id){ return new Promise((resolve)=>{ const el = document.getElementById(id); if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasPaginated(canvas); resolve(); }).catch(()=> resolve()); }); }
-  function captureElement(el){ return new Promise((resolve)=>{ if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasPaginated(canvas); resolve(); }).catch(()=> resolve()); }); }
+  // Añade el canvas en una sola pieza si cabe en la página; si no, utiliza paginado
+  function addCanvasSmart(canvas){
+    return new Promise((resolve)=>{
+      // escala para ancho disponible
+      const scale = contentW / canvas.width;
+      const drawH = canvas.height * scale;
+      // si cabe en la altura restante de la página (contentH) lo añadimos sin partir
+      if(drawH <= contentH){
+        if(y + drawH > pageH - margin){ doc.addPage(); y = margin; }
+        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+        doc.addImage(imgData, 'JPEG', margin, y, contentW, drawH);
+        y += drawH + 4;
+        return resolve();
+      }
+      // si no cabe entero, usar paginado (slice)
+      addCanvasPaginated(canvas).then(()=>resolve());
+    });
+  }
+  function captureSection(id){ return new Promise((resolve)=>{ const el = document.getElementById(id); if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasSmart(canvas); resolve(); }).catch(()=> resolve()); }); }
+  function captureElement(el){ return new Promise((resolve)=>{ if(!el){ return resolve(); } html2canvas(el, {scale:2, useCORS:true, backgroundColor:'#ffffff'}).then(async (canvas)=>{ await addCanvasSmart(canvas); resolve(); }).catch(()=> resolve()); }); }
   function addBullets(lines){ doc.setFontSize(9); doc.setFont(undefined,'normal'); lines.forEach(line=>{ if(y + 6 > pageH - margin){ doc.addPage(); y = margin; } doc.text('• '+line, margin, y); y += 5.5; }); y += 2; }
   const d = (window.nayaritData||nayaritData); const mKey = municipioSelect? municipioSelect.value : null; const m = d.municipios[mKey]||{}; const pct = (num,den)=> ((num||0)/(den||1)*100).toFixed(1);
   const plan = [
@@ -53,13 +86,31 @@ function generatePDF(){
     {id:'servicios', bullets:[ `Electricidad: ${pct(m.VPH_C_ELEC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_C_ELEC||0)} viviendas)`, `Agua entubada: ${pct(m.VPH_AGUADV,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_AGUADV||0)} viviendas)`, `Drenaje: ${pct(m.VPH_DRENAJ,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_DRENAJ||0)} viviendas)`, `Computadora: ${pct(m.VPH_PC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_PC||0)} viviendas)`, `Internet: ${pct(m.VPH_INTER,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_INTER||0)} viviendas)`, `Teléfono celular: ${pct(m.VPH_CEL,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_CEL||0)} viviendas)` ]}
   ];
   (async()=>{
-    try { const logoData = await loadImageAsDataURL(logoPath);
-      // Dibujar logo a la izquierda y título a su derecha
-      const logoW = 22; const logoH = 22; doc.addImage(logoData,'PNG', margin, margin-1, logoW, logoH);
-      doc.setFontSize(14); doc.setFont(undefined,'bold'); const titleX = margin + logoW + 6; doc.text(title, titleX, margin+6, {align:'left'});
-      // Nombre del municipio en nueva línea, alineado a la izquierda y en negritas
-      doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.text('Municipio: '+municipio, titleX, margin+14, {align:'left'});
-      y = margin + 24;
+    try {
+      // Preferir data URL embebida si fue generada (logo-data.js crea window.__LOGO_DATA_URL)
+      const logoData = (typeof window !== 'undefined' && window.__LOGO_DATA_URL) ? window.__LOGO_DATA_URL : await loadImageAsDataURL(logoPath);
+      if(logoData){
+        // Dibujar logo manteniendo aspecto. Creamos una Image para medir la relación de aspecto
+        try{
+          const imgEl = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=rej; i.src = logoData; });
+          const logoHmm = 14; // altura deseada en mm
+          // calcular ancho proporcional en mm
+          const logoWmm = Math.max(8, Math.min(logoHmm * (imgEl.naturalWidth / imgEl.naturalHeight), 44));
+          doc.addImage(logoData,'PNG', margin, margin-1, logoWmm, logoHmm);
+          doc.setFontSize(14); doc.setFont(undefined,'bold'); const titleX = margin + logoWmm + 6; doc.text(title, titleX, margin+6, {align:'left'});
+          // Nombre del municipio en nueva línea, alineado a la izquierda y en negritas
+          doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.text('Municipio: '+municipio, titleX, margin+14, {align:'left'});
+          y = margin + Math.max(logoHmm + 6, 24);
+        }catch(e){
+          // Si falla medir la imagen (muy raro con dataURL), usar comportamiento fallback
+          const logoW = 22; const logoH = 22; doc.addImage(logoData,'PNG', margin, margin-1, logoW, logoH);
+          doc.setFontSize(14); doc.setFont(undefined,'bold'); const titleX = margin + logoW + 6; doc.text(title, titleX, margin+6, {align:'left'});
+          doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.text('Municipio: '+municipio, titleX, margin+14, {align:'left'});
+          y = margin + 24;
+        }
+      } else {
+        throw new Error('no-logo');
+      }
     } catch {
       // fallback: centro y municipio a la derecha si no carga logo
       try{ doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18; }catch(e){}
@@ -80,14 +131,16 @@ function generatePDF(){
     // Luego capturamos el resto del <main> sin la sección ya capturada para
     // evitar duplicados: ocultamos temporalmente la sección original y capturamos el main.
     try{
-      const esEl = document.getElementById('estructura-demografica');
-      if(esEl){
-        const prevDisplay = esEl.style.display;
-        esEl.style.display = 'none';
-        await captureElement(document.querySelector('main'));
-        esEl.style.display = prevDisplay;
-      } else {
-        await captureElement(document.querySelector('main'));
+      // En lugar de capturar todo <main> de una sola vez (que puede producir
+      // un canvas muy alto y partir gráficas), iteramos sección por sección
+      // y capturamos cada una; ya capturamos 'estructura-demografica' arriba,
+      // así que la saltamos.
+      const sections = Array.from(document.querySelectorAll('main > section'));
+      for(const sec of sections){
+        if(!sec.id || sec.id === 'estructura-demografica') continue;
+        // capturar la sección individualmente; addCanvasSmart evitará partir
+        // el canvas si cabe en la página
+        await captureElement(sec);
       }
     }catch(e){ /* ignore capture errors */ }
 
