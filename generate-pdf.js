@@ -35,11 +35,24 @@ function generatePDF(){
     {id:'inclusion', bullets:[ `Hablantes de lengua indígena (3+): ${pct(m.P3YM_HLI,m.P_3YMAS)}% (${new Intl.NumberFormat('es-MX').format(m.P3YM_HLI||0)} personas)`, `Población con discapacidad o limitación: ${pct(m.PCON_DISC,m.POBTOT)}% (${new Intl.NumberFormat('es-MX').format(m.PCON_DISC||0)} personas)` ]},
     {id:'movilidad', bullets:[ `Nacidos en la entidad: ${pct(m.PNACENT,m.POBTOT)}%`, `Nacidos en otra entidad: ${pct(m.PNACOE,m.POBTOT)}%`, `Misma residencia 2015–2020: ${pct(m.PRES2015,m.P_5YMAS)}%`, `Residían en otra entidad en 2015: ${pct(m.PRESOE15,m.P_5YMAS)}%` ]},
     {id:'vivienda', bullets:[ `Total de viviendas: ${new Intl.NumberFormat('es-MX').format(m.VIVTOT||0)}`, `Viviendas habitadas: ${new Intl.NumberFormat('es-MX').format(m.TVIVHAB||0)}`, `Ocupantes por vivienda: ${(m.PROM_OCUP||0).toFixed(1)} personas` ]},
-    {id:'servicios-basicos', bullets:[ `Electricidad: ${pct(m.VPH_C_ELEC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_C_ELEC||0)} viviendas)`, `Agua entubada: ${pct(m.VPH_AGUADV,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_AGUADV||0)} viviendas)`, `Drenaje: ${pct(m.VPH_DRENAJ,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_DRENAJ||0)} viviendas)` ]},
-    {id:'conectividad', bullets:[ `Computadora: ${pct(m.VPH_PC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_PC||0)} viviendas)`, `Internet: ${pct(m.VPH_INTER,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_INTER||0)} viviendas)`, `Teléfono celular: ${pct(m.VPH_CEL,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_CEL||0)} viviendas)` ]}
+    // Capturar ambas gráficas de servicios en una sola sección para que salgan en la misma línea en el PDF
+    {id:'servicios', bullets:[ `Electricidad: ${pct(m.VPH_C_ELEC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_C_ELEC||0)} viviendas)`, `Agua entubada: ${pct(m.VPH_AGUADV,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_AGUADV||0)} viviendas)`, `Drenaje: ${pct(m.VPH_DRENAJ,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_DRENAJ||0)} viviendas)`, `Computadora: ${pct(m.VPH_PC,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_PC||0)} viviendas)`, `Internet: ${pct(m.VPH_INTER,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_INTER||0)} viviendas)`, `Teléfono celular: ${pct(m.VPH_CEL,m.VIVPARH_CV)}% (${new Intl.NumberFormat('es-MX').format(m.VPH_CEL||0)} viviendas)` ]}
   ];
   (async()=>{
-    try { const logoData = await loadImageAsDataURL(logoPath); doc.addImage(logoData,'PNG', margin, margin-1, 22, 22); } catch {}
+    try { const logoData = await loadImageAsDataURL(logoPath);
+      // Dibujar logo a la izquierda y título a su derecha
+      const logoW = 22; const logoH = 22; doc.addImage(logoData,'PNG', margin, margin-1, logoW, logoH);
+      doc.setFontSize(14); doc.setFont(undefined,'bold'); const titleX = margin + logoW + 6; doc.text(title, titleX, margin+6, {align:'left'});
+      // Nombre del municipio en nueva línea, alineado a la izquierda y en negritas
+      doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.text('Municipio: '+municipio, titleX, margin+14, {align:'left'});
+      y = margin + 24;
+    } catch {
+      // fallback: centro y municipio a la derecha si no carga logo
+      try{ doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18; }catch(e){}
+    }
+    // Capturar la sección de estructura demográfica (incluye las tarjetas de indicadores y la pirámide)
+    await captureSection('estructura-demografica');
+
     // Antes de capturar, activar la bandera que indica a los charts que dibujen los valores absolutos
     try{
       window.__showChartAbsOnCanvas = true;
@@ -49,7 +62,23 @@ function generatePDF(){
   }catch {}
 
     doc.setFontSize(14); doc.setFont(undefined,'bold'); doc.text(title, pageW/2, margin+6, {align:'center'}); doc.setFontSize(10); doc.setFont(undefined,'normal'); doc.text('Municipio: '+municipio, pageW - margin, margin+6, {align:'right'}); y = margin + 18;
-    for(const sec of plan){ doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; } const mapTitle = { 'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO', 'economia':'III. PANORAMA ECONÓMICO', 'salud':'IV. SERVICIOS DE SALUD', 'inclusion':'V. INCLUSIÓN Y DIVERSIDAD', 'movilidad':'VI. MOVILIDAD POBLACIONAL', 'vivienda':'VII. VIVIENDA', 'servicios-basicos':'VIII. SERVICIOS BÁSICOS EN VIVIENDAS', 'conectividad':'VIII. CONECTIVIDAD Y BIENES TIC' }; doc.text(mapTitle[sec.id]||'', margin, y); y += 6; addBullets(sec.bullets); await captureSection(sec.id); }
+    for(const sec of plan){
+      doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; }
+      const mapTitle = {
+        'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO',
+        'economia':'III. PANORAMA ECONÓMICO',
+        'salud':'IV. SERVICIOS DE SALUD',
+        'inclusion':'V. INCLUSIÓN Y DIVERSIDAD',
+        'movilidad':'VI. MOVILIDAD POBLACIONAL',
+        'vivienda':'VII. VIVIENDA',
+        'servicios':'VIII. SERVICIOS EN VIVIENDAS'
+      };
+      doc.text(mapTitle[sec.id]||'', margin, y);
+      y += 6;
+      addBullets(sec.bullets);
+      // Capturar la sección completa si existe (captura padres con múltiples gráficas)
+      await captureSection(sec.id);
+    }
 
     // Tras capturar todo, desactivar la bandera y re-renderizar los charts para volver al estado de pantalla
     try{
