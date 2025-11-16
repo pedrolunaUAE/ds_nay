@@ -10,10 +10,11 @@ function loadImageAsDataURL(src){
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   })).catch(()=>{
-    // Fallback clásico usando Image (mantener compatibilidad)
+    // Fallback clásico usando Image (mantener compatibilidad).
+    // No forzamos crossOrigin aquí porque al abrir la página con file://
+    // muchos navegadores producen origin 'null' y la carga falla.
     return new Promise((resolve,reject)=>{
       const img = new Image();
-      img.crossOrigin = 'anonymous';
       img.onload = ()=>{ const c=document.createElement('canvas'); c.width=img.naturalWidth; c.height=img.naturalHeight; const ctx=c.getContext('2d'); ctx.drawImage(img,0,0); resolve(c.toDataURL('image/png')); };
       img.onerror = reject; img.src = src;
     });
