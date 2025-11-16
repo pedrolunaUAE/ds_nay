@@ -76,7 +76,12 @@ function generatePDF(){
     // Nota: no re-dibujamos el título/municipio aquí porque ya fueron colocados arriba
     // y evitar duplicados en el PDF (ver control en el bloque de logo).
     // y ya fue ajustado más arriba cuando se agregó el logo.
-    for(const sec of plan){
+    // El usuario pidió quitar varias secciones del PDF (II, III, IV, VI, VII, VIII).
+    // Filtramos el plan para eliminar los ids correspondientes antes de iterar.
+    const removeIds = ['educacion','economia','salud','movilidad','vivienda','servicios'];
+    const renderPlan = plan.filter(s => !removeIds.includes(s.id));
+
+    for(const sec of renderPlan){
       doc.setFontSize(11); doc.setFont(undefined,'bold'); if(y + 8 > pageH - margin){ doc.addPage(); y = margin; }
       const mapTitle = {
         'educacion':'II. EDUCACIÓN Y CAPITAL HUMANO',
